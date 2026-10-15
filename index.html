@@ -1,0 +1,391 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Student API Interface</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 30px 16px;
+            font-family: Arial, sans-serif;
+            background: #f1f5f9;
+            color: #1e293b;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: #1769aa;
+            color: white;
+            padding: 28px;
+            border-radius: 14px;
+            margin-bottom: 24px;
+        }
+
+        header h1 {
+            margin: 0 0 10px;
+            font-size: 28px;
+        }
+
+        header p {
+            margin: 0;
+            line-height: 1.6;
+        }
+
+        .card {
+            background: white;
+            padding: 24px;
+            margin-bottom: 20px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+        }
+
+        h2 {
+            margin-top: 0;
+            color: #1769aa;
+        }
+
+        .description {
+            color: #64748b;
+            line-height: 1.6;
+        }
+
+        button {
+            display: inline-block;
+            padding: 12px 18px;
+            margin-top: 10px;
+            background: #1769aa;
+            color: white;
+            border: none;
+            border-radius: 7px;
+            font-size: 15px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #0f4f83;
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: wait;
+        }
+
+        input {
+            display: block;
+            width: 100%;
+            max-width: 450px;
+            padding: 12px;
+            margin-top: 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 7px;
+            font-size: 15px;
+        }
+
+        input:focus {
+            outline: 2px solid #93c5fd;
+            border-color: #1769aa;
+        }
+
+        #result,
+        #greeting,
+        #apiStatus {
+            margin-top: 18px;
+            line-height: 1.8;
+            overflow-wrap: anywhere;
+        }
+
+        .student-row {
+            padding: 10px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .student-row:last-child {
+            border-bottom: none;
+        }
+
+        .label {
+            display: inline-block;
+            min-width: 125px;
+            font-weight: bold;
+        }
+
+        .message {
+            padding: 12px;
+            border-radius: 7px;
+            background: #eff6ff;
+            color: #1d4ed8;
+        }
+
+        .error {
+            padding: 12px;
+            border-radius: 7px;
+            background: #fef2f2;
+            color: #b91c1c;
+        }
+
+        footer {
+            text-align: center;
+            color: #64748b;
+            font-size: 13px;
+            padding: 16px;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 18px 12px;
+            }
+
+            header,
+            .card {
+                padding: 20px;
+            }
+
+            header h1 {
+                font-size: 24px;
+            }
+
+            .label {
+                display: block;
+                min-width: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+
+        <header>
+            <h1>Student API Interface</h1>
+            <p>
+                A simple web application connected to a Flask API.
+                Retrieve student information and test the greeting service.
+            </p>
+        </header>
+
+        <main>
+
+            <!-- Student Information -->
+            <section class="card">
+                <h2>Student Information</h2>
+
+                <p class="description">
+                    Click the button to retrieve student data
+                    from the /student API endpoint.
+                </p>
+
+                <button id="studentButton" onclick="loadStudent()">
+                    Load Student Information
+                </button>
+
+                <div id="result" aria-live="polite">
+                    Student information has not been loaded yet.
+                </div>
+            </section>
+
+            <!-- Greeting API -->
+            <section class="card">
+                <h2>Greeting API</h2>
+
+                <p class="description">
+                    Enter your first name to receive a greeting
+                    from the /hello API endpoint.
+                </p>
+
+                <form id="greetingForm">
+                    <label for="nameInput">Your first name</label>
+
+                    <input
+                        type="text"
+                        id="nameInput"
+                        placeholder="Enter your first name"
+                        maxlength="100"
+                        required
+                    >
+
+                    <button id="greetingButton" type="submit">
+                        Say Hello
+                    </button>
+                </form>
+
+                <div id="greeting" aria-live="polite"></div>
+            </section>
+
+            <!-- API Status -->
+            <section class="card">
+                <h2>API Connection Status</h2>
+
+                <p class="description">
+                    Check whether your Flask API is responding.
+                </p>
+
+                <button id="statusButton" onclick="checkAPI()">
+                    Check API Status
+                </button>
+
+                <div id="apiStatus" aria-live="polite">
+                    Click the button to check the API.
+                </div>
+            </section>
+
+        </main>
+
+        <footer>
+            Laboratory Activity 6 | Flask API Web Interface
+        </footer>
+
+    </div>
+
+    <script>
+        async function loadStudent() {
+            const result = document.getElementById("result");
+            const button = document.getElementById("studentButton");
+
+            button.disabled = true;
+            result.textContent = "Loading student information...";
+
+            try {
+                const response = await fetch("/student");
+
+                if (!response.ok) {
+                    throw new Error("HTTP " + response.status);
+                }
+
+                const data = await response.json();
+
+                result.replaceChildren();
+
+                const fields = [
+                    ["Student ID", data.student_id],
+                    ["Name", data.name],
+                    ["Program", data.program],
+                    ["Year", data.year],
+                    ["Section", data.section]
+                ];
+
+                fields.forEach(function (field) {
+                    const row = document.createElement("div");
+                    row.className = "student-row";
+
+                    const label = document.createElement("span");
+                    label.className = "label";
+                    label.textContent = field[0] + ":";
+
+                    const value = document.createElement("span");
+                    value.textContent =
+                        field[1] === undefined || field[1] === null
+                            ? "N/A"
+                            : String(field[1]);
+
+                    row.append(label, value);
+                    result.appendChild(row);
+                });
+
+            } catch (error) {
+                result.replaceChildren();
+
+                const message = document.createElement("p");
+                message.className = "error";
+                message.textContent =
+                    "Unable to retrieve student data: " + error.message;
+
+                result.appendChild(message);
+
+            } finally {
+                button.disabled = false;
+            }
+        }
+
+
+        document.getElementById("greetingForm")
+            .addEventListener("submit", async function (event) {
+                event.preventDefault();
+
+                const name = document
+                    .getElementById("nameInput")
+                    .value.trim();
+
+                const greeting = document.getElementById("greeting");
+                const button = document.getElementById("greetingButton");
+
+                if (!name) {
+                    greeting.textContent = "Please enter your first name.";
+                    return;
+                }
+
+                button.disabled = true;
+                greeting.textContent = "Getting your greeting...";
+
+                try {
+                    const url = "/hello?name=" + encodeURIComponent(name);
+                    const response = await fetch(url);
+
+                    if (!response.ok) {
+                        throw new Error("HTTP " + response.status);
+                    }
+
+                    const data = await response.json();
+
+                    greeting.replaceChildren();
+
+                    const message = document.createElement("p");
+                    message.className = "message";
+                    message.textContent = data.message;
+
+                    greeting.appendChild(message);
+
+                } catch (error) {
+                    greeting.textContent =
+                        "Unable to retrieve greeting: " + error.message;
+                    greeting.className = "error";
+
+                } finally {
+                    button.disabled = false;
+                }
+            });
+
+
+        async function checkAPI() {
+            const status = document.getElementById("apiStatus");
+            const button = document.getElementById("statusButton");
+
+            button.disabled = true;
+            status.textContent = "Checking API...";
+
+            try {
+                const response = await fetch("/health");
+
+                if (!response.ok) {
+                    throw new Error("HTTP " + response.status);
+                }
+
+                const data = await response.json();
+
+                status.className = "message";
+                status.textContent = data.message;
+
+            } catch (error) {
+                status.className = "error";
+                status.textContent =
+                    "API connection failed: " + error.message;
+
+            } finally {
+                button.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>

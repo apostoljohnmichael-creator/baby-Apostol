@@ -1,40 +1,50 @@
-from flask import Flask, jsonify, request
 
-app = Flask(__name__)
+from flask import Flask, jsonify, request, render_template
+
+app = Flask(__name__, template_folder=".")
 
 
-# 1. Home
-@app.route('/')
+# Home page
+@app.route("/")
 def home():
-    return "Welcome to John Michael Apostol's API! sir success!"
+    return render_template("index.html")
 
 
-# 2. Student Information
-@app.route('/student')
+# Student Information API
+@app.route("/student")
 def get_student():
-    return jsonify({
-        "student_id": "24-00188",
-        "name": "John Michael Apostol",
+    student = {
+        "student_id": "2026-00123",
+        "name": "John Michieal Apostol",
         "program": "BSIT",
         "year": 3,
-        "section": "hamilton"
-    })
+        "section": "A"
+    }
+
+    return jsonify(student)
 
 
-# 3. Greeting
-@app.route('/hello')
+# Greeting API
+@app.route("/hello")
 def say_hello():
-    name = request.args.get('name', 'John Michael Apostol')
+    name = request.args.get("name", "Student").strip()
+
+    if not name:
+        name = "Student"
 
     return jsonify({
         "message": f"Hello, {name}!"
     })
 
 
-# Run the Flask application
-if __name__ == '__main__':
-    app.run(
-        host='0.0.0.0',
-        port=5000,
-        debug=True
-    )
+# Health check endpoint
+@app.route("/health")
+def health():
+    return jsonify({
+        "status": "success",
+        "message": "Flask API is running."
+    })
+
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000, debug=True)
