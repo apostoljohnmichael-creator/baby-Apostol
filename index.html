@@ -4,7 +4,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>Student API Interface</title>
 
     <style>
@@ -101,19 +100,23 @@
 
         #result,
         #greeting,
-        #apiStatus {
+        #apiStatus,
+        #studentList {
             margin-top: 18px;
             line-height: 1.8;
             overflow-wrap: anywhere;
         }
 
         .student-row {
-            padding: 10px 0;
-            border-bottom: 1px solid #e2e8f0;
+            padding: 12px;
+            margin-bottom: 8px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 7px;
         }
 
         .student-row:last-child {
-            border-bottom: none;
+            margin-bottom: 0;
         }
 
         .label {
@@ -172,13 +175,14 @@
             <h1>Student API Interface</h1>
             <p>
                 A simple web application connected to a Flask API.
-                Retrieve student information and test the greeting service.
+                Retrieve student information, test the greeting service,
+                and display records from an SQLite database.
             </p>
         </header>
 
         <main>
 
-            <!-- Student Information -->
+            <!-- Original Student Information API -->
             <section class="card">
                 <h2>Student Information</h2>
 
@@ -187,7 +191,9 @@
                     from the /student API endpoint.
                 </p>
 
-                <button id="studentButton" onclick="loadStudent()">
+                <button
+                    id="studentButton"
+                    onclick="loadStudent()">
                     Load Student Information
                 </button>
 
@@ -196,7 +202,7 @@
                 </div>
             </section>
 
-            <!-- Greeting API -->
+            <!-- Original Greeting API -->
             <section class="card">
                 <h2>Greeting API</h2>
 
@@ -224,7 +230,7 @@
                 <div id="greeting" aria-live="polite"></div>
             </section>
 
-            <!-- API Status -->
+            <!-- Original API Status -->
             <section class="card">
                 <h2>API Connection Status</h2>
 
@@ -232,7 +238,9 @@
                     Check whether your Flask API is responding.
                 </p>
 
-                <button id="statusButton" onclick="checkAPI()">
+                <button
+                    id="statusButton"
+                    onclick="checkAPI()">
                     Check API Status
                 </button>
 
@@ -241,15 +249,40 @@
                 </div>
             </section>
 
+            <!-- NEW: SQLite Database Records -->
+            <section class="card">
+                <h2>Students from Database</h2>
+
+                <p class="description">
+                    Retrieve all student records stored in the
+                    SQLite students.db database through the
+                    /students API endpoint.
+                </p>
+
+                <button
+                    id="loadStudentsButton"
+                    onclick="loadStudents()">
+                    Load Students
+                </button>
+
+                <div id="studentList" aria-live="polite">
+                    Click Load Students to display database records.
+                </div>
+            </section>
+
         </main>
 
         <footer>
-            Laboratory Activity 6 | Flask API Web Interface
+            Laboratory Activity 7 | Flask API and SQLite Database
         </footer>
 
     </div>
 
     <script>
+        // ==========================================
+        // 1. ORIGINAL STUDENT INFORMATION API
+        // ==========================================
+
         async function loadStudent() {
             const result = document.getElementById("result");
             const button = document.getElementById("studentButton");
@@ -276,7 +309,7 @@
                     ["Section", data.section]
                 ];
 
-                fields.forEach(function (field) {
+                fields.forEach(function(field) {
                     const row = document.createElement("div");
                     row.className = "student-row";
 
@@ -310,8 +343,12 @@
         }
 
 
+        // ==========================================
+        // 2. ORIGINAL GREETING API
+        // ==========================================
+
         document.getElementById("greetingForm")
-            .addEventListener("submit", async function (event) {
+            .addEventListener("submit", async function(event) {
                 event.preventDefault();
 
                 const name = document
@@ -322,11 +359,13 @@
                 const button = document.getElementById("greetingButton");
 
                 if (!name) {
-                    greeting.textContent = "Please enter your first name.";
+                    greeting.textContent =
+                        "Please enter your first name.";
                     return;
                 }
 
                 button.disabled = true;
+                greeting.className = "";
                 greeting.textContent = "Getting your greeting...";
 
                 try {
@@ -348,9 +387,9 @@
                     greeting.appendChild(message);
 
                 } catch (error) {
+                    greeting.className = "error";
                     greeting.textContent =
                         "Unable to retrieve greeting: " + error.message;
-                    greeting.className = "error";
 
                 } finally {
                     button.disabled = false;
@@ -358,11 +397,16 @@
             });
 
 
+        // ==========================================
+        // 3. ORIGINAL API CONNECTION STATUS
+        // ==========================================
+
         async function checkAPI() {
             const status = document.getElementById("apiStatus");
             const button = document.getElementById("statusButton");
 
             button.disabled = true;
+            status.className = "";
             status.textContent = "Checking API...";
 
             try {
@@ -381,6 +425,79 @@
                 status.className = "error";
                 status.textContent =
                     "API connection failed: " + error.message;
+
+            } finally {
+                button.disabled = false;
+            }
+        }
+
+
+        // ==========================================
+        // 4. NEW SQLITE DATABASE API
+        // ==========================================
+
+        async function loadStudents() {
+            const studentList =
+                document.getElementById("studentList");
+
+            const button =
+                document.getElementById("loadStudentsButton");
+
+            button.disabled = true;
+            studentList.className = "";
+            studentList.textContent = "Loading student records...";
+
+            try {
+                // Request records from Flask's SQLite API
+                const response = await fetch("/students");
+
+                if (!response.ok) {
+                    throw new Error("HTTP " + response.status);
+                }
+
+                const data = await response.json();
+
+                studentList.replaceChildren();
+
+                if (!Array.isArray(data) || data.length === 0) {
+                    studentList.textContent =
+                        "No student records found in the database.";
+                    return;
+                }
+
+                // Display every student returned by the API
+                data.forEach(function(student) {
+                    const row = document.createElement("div");
+                    row.className = "student-row";
+
+                    const details = document.createElement("div");
+
+                    details.textContent =
+                        student.student_id + " - " +
+                        student.name + " | " +
+                        student.program + " | Year " +
+                        student.year + " | Section " +
+                        student.section;
+
+                    row.appendChild(details);
+                    studentList.appendChild(row);
+                });
+
+                // Display the number of records retrieved
+                const count = document.createElement("p");
+                count.className = "message";
+                count.textContent =
+                    "Successfully loaded " + data.length +
+                    " student record(s).";
+
+                studentList.appendChild(count);
+
+            } catch (error) {
+                studentList.replaceChildren();
+                studentList.className = "error";
+                studentList.textContent =
+                    "Unable to retrieve student records: " +
+                    error.message;
 
             } finally {
                 button.disabled = false;
