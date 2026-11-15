@@ -16,6 +16,47 @@ PARTNER_API_URL = os.environ.get(
 FIELDS = ("student_id", "name", "program", "year", "section")
 
 
+def ensure_database():
+    conn = sqlite3.connect(str(DATABASE), timeout=20)
+    try:
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS students (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                student_id TEXT NOT NULL,
+                name TEXT NOT NULL,
+                program TEXT NOT NULL,
+                year INTEGER NOT NULL,
+                section TEXT NOT NULL,
+                source TEXT DEFAULT 'Local'
+            )
+        """)
+        columns = [row[1] for row in conn.execute("PRAGMA table_info(students)").fetchall()]
+        if "source" not in columns:
+            conn.execute("ALTER TABLE students ADD COLUMN source TEXT DEFAULT 'Local'")
+        conn.execute("UPDATE students SET source='Local' WHERE source IS NULL OR TRIM(source)=''")
+
+        if conn.execute("SELECT COUNT(*) FROM students").fetchone()[0] == 0:
+            conn.executemany(
+                """
+                INSERT INTO students (student_id, name, program, year, section, source)
+                VALUES (?, ?, ?, ?, ?, ?)
+                """,
+                [
+                    ("2026-00123", "JONARD ALIPALA", "BSIT", 3, "HAMILTON", "Local"),
+                    ("2026-00124", "IAN AUSTRIA", "BSIT", 3, "HAMILTON", "Local"),
+                    ("2026-00125", "RENEIR CALBRO", "BSIT", 3, "HAMILTON", "Local"),
+                    ("2026-00126", "JOH MARK ALARBA", "BSIT", 3, "HAMILTON", "Local"),
+                    ("2026-00127", "JOHN MICHAEL BAUSTISTA", "BSIT", 3, "HAMILTON", "Local"),
+                ],
+            )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+ensure_database()
+
+
 def get_db_connection():
     conn = sqlite3.connect(str(DATABASE), timeout=20)
     conn.row_factory = sqlite3.Row
@@ -47,7 +88,25 @@ def rows_as_dicts(rows):
 
 @app.get("/")
 def home():
-    return render_template("index.html")
+    return render_template("index.html", partner_api_url=PARTNER_API_URL)
+
+
+@app.get("/hello")
+def hello():
+    name = request.args.get("name", "Student").strip() or "Student"
+    return jsonify({"message": f"Hello, {name}! Welcome to StudentHub."})
+
+
+@app.get("/student")
+def student_sample():
+    conn = get_db_connection()
+    try:
+        row = conn.execute("SELECT * FROM students ORDER BY id ASC LIMIT 1").fetchone()
+        if row is None:
+            return jsonify(error="No student record found."), 404
+        return jsonify(dict(row))
+    finally:
+        conn.close()
 
 
 @app.get("/health")
@@ -217,8 +276,9 @@ def search_students():
 
 @app.get("/partner-records")
 def partner_records():
+    api_url = request.args.get("api_url", PARTNER_API_URL).strip() or PARTNER_API_URL
     try:
-        response = requests.get(PARTNER_API_URL, timeout=25)
+        response = requests.get(api_url, timeout=25)
         response.raise_for_status()
         records = response.json()
         if not isinstance(records, list):
@@ -252,12 +312,14 @@ def import_student():
 
 @app.post("/send-to-partner")
 def send_to_partner():
-    data, error = validate_student(request.get_json(silent=True))
+    payload = request.get_json(silent=True) or {}
+    api_url = payload.get("api_url", PARTNER_API_URL).strip() or PARTNER_API_URL
+    data, error = validate_student(payload)
     if error:
         return jsonify(error=error), 400
     record = {**data, "source": "Partner API"}
     try:
-        response = requests.post(PARTNER_API_URL, json=record, timeout=25)
+        response = requests.post(api_url, json=record, timeout=25)
         try:
             partner_result = response.json()
         except ValueError:
@@ -272,4 +334,4 @@ def send_to_partner():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)), debug=True)
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)), debug=False)

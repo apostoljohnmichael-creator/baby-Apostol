@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STUDENTHUB | Activity 9</title>
+    <style>
+        :root {
+            --bg: #f3f7fb;
+            --card: #ffffff;
+            --primary: #0f4c81;
+            --primary-dark: #0b3d67;
+            --accent: #e8f1ff;
+            --text: #1e293b;
+            --muted: #64748b;
+            --border: #dfeaf5;
+            --danger: #dc2626;
+            --success: #15803d;
+            --warning: #f59e0b;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding: 28px 16px 40px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .hero {
+            background: linear-gradient(135deg, var(--primary), #1d6fb8);
+            color: white;
+            padding: 28px 24px;
+            border-radius: 18px;
+            box-shadow: 0 16px 36px rgba(15, 76, 129, 0.14);
+            margin-bottom: 24px;
+        }
+
+        .hero h1 {
+            margin: 0 0 8px;
+            font-size: clamp(2rem, 4vw, 2.8rem);
+        }
+
+        .hero p {
+            margin: 0;
+            font-size: 1rem;
+            line-height: 1.6;
+            opacity: 0.95;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 22px;
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            margin-top: 0;
+            margin-bottom: 8px;
+            color: var(--primary);
+            font-size: 1.45rem;
+        }
+
+        .description {
+            margin: 0 0 16px;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        form {
+            display: block;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0 18px;
+        }
+
+        label {
+            display: block;
+            font-weight: 700;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 11px 12px;
+            margin-bottom: 14px;
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            font-size: 1rem;
+            background: white;
+        }
+
+        input:focus, select:focus {
+            outline: 3px solid rgba(59, 130, 246, 0.2);
+            border-color: var(--primary);
+        }
+
+        button {
+            border: none;
+            border-radius: 10px;
+            background: var(--primary);
+            color: white;
+            padding: 11px 16px;
+            font-size: 0.96rem;
+            cursor: pointer;
+            transition: 0.2s ease;
+        }
+
+        button:hover { background: var(--primary-dark); }
+        button:disabled { opacity: 0.6; cursor: wait; }
+
+        .button-secondary {
+            background: #64748b;
+        }
+
+        .button-secondary:hover { background: #475569; }
+
+        .button-danger {
+            background: var(--danger);
+        }
+
+        .button-danger:hover { background: #991b1b; }
+
+        .button-success {
+            background: var(--success);
+        }
+
+        .button-success:hover { background: #166534; }
+
+        .table-wrap {
+            overflow-x: auto;
+            margin-top: 12px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 720px;
+        }
+
+        th, td {
+            padding: 12px 10px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            background: var(--accent);
+            color: var(--primary-dark);
+        }
+
+        tbody tr:hover { background: #f8fbff; }
+
+        .status {
+            margin-top: 12px;
+            border-radius: 10px;
+            padding: 12px 14px;
+            overflow-wrap: anywhere;
+            line-height: 1.5;
+        }
+
+        .status.info {
+            background: #ecfdf5;
+            color: #14532d;
+        }
+
+        .status.error {
+            background: #fef2f2;
+            color: #991b1b;
+        }
+
+        .status.message {
+            background: #eff6ff;
+            color: #1d4ed8;
+        }
+
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .muted {
+            color: var(--muted);
+        }
+
+        @media (max-width: 640px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            body {
+                padding-left: 12px;
+                padding-right: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="hero">
+            <h1>STUDENTHUB</h1>
+            <p>Laboratory Activity 9 — System-to-System API Integration</p>
+        </header>
+
+        <main>
+            <section class="card">
+                <h2>Local Student Records</h2>
+                <p class="description">Add a student, edit an existing record, or delete a practice entry.</p>
+
+                <form id="studentForm">
+                    <input type="hidden" id="recordId">
+
+                    <div class="form-grid">
+                        <div>
+                            <label for="studentId">Student ID</label>
+                            <input id="studentId" required maxlength="50" placeholder="e.g. 2026-00123">
+                        </div>
+                        <div>
+                            <label for="studentName">Name</label>
+                            <input id="studentName" required maxlength="150" placeholder="e.g. Juan Dela Cruz">
+                        </div>
+                        <div>
+                            <label for="program">Program</label>
+                            <input id="program" required maxlength="100" placeholder="e.g. BSIT">
+                        </div>
+                        <div>
+                            <label for="year">Year</label>
+                            <select id="year" required>
+                                <option value="">Select year</option>
+                                <option value="1">1st Year</option>
+                                <option value="2">2nd Year</option>
+                                <option value="3">3rd Year</option>
+                                <option value="4">4th Year</option>
+                                <option value="5">5th Year</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="section">Section</label>
+                            <input id="section" required maxlength="50" placeholder="e.g. A">
+                        </div>
+                    </div>
+
+                    <div class="toolbar">
+                        <button id="saveButton" type="submit">Add Student</button>
+                        <button class="button-secondary" type="button" onclick="resetForm()">Clear</button>
+                    </div>
+                    <div id="localStatus" class="status" aria-live="polite"></div>
+                </form>
+
+                <div class="toolbar" style="margin-top: 18px;">
+                    <h2 style="margin: 0;">Records</h2>
+                    <button type="button" onclick="loadLocalStudents()">Refresh</button>
+                </div>
+
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Student ID</th>
+                                <th>Name</th>
+                                <th>Program</th>
+                                <th>Year</th>
+                                <th>Section</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="localTableBody"><tr><td colspan="7" class="muted">Loading records...</td></tr></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="card">
+                <h2>Partner API</h2>
+                <p class="description">Read records from the partner API and compare them with your local database.</p>
+
+                <label for="partnerApiUrl">Partner API URL</label>
+                <input id="partnerApiUrl" type="url" value="{{ partner_api_url }}" placeholder="https://classmate.onrender.com/api/students">
+
+                <div class="toolbar">
+                    <button type="button" onclick="loadPartnerRecords()">Load Partner Records</button>
+                    <button type="button" class="button-success" onclick="compareCounts()">Compare Record Counts</button>
+                </div>
+
+                <div id="partnerStatus" class="status" aria-live="polite"></div>
+
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Student ID</th>
+                                <th>Name</th>
+                                <th>Program</th>
+                                <th>Year</th>
+                                <th>Section</th>
+                            </tr>
+                        </thead>
+                        <tbody id="partnerTableBody"><tr><td colspan="6" class="muted">No partner records loaded yet.</td></tr></tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        let localRecords = [];
+        let partnerRecords = [];
+
+        function setStatus(element, message, kind = 'message') {
+            element.className = 'status ' + kind;
+            element.textContent = message;
+        }
+
+        function cellText(value) {
+            return value === null || value === undefined ? '' : String(value);
+        }
+
+        function renderLocalTable() {
+            const body = document.getElementById('localTableBody');
+            body.innerHTML = '';
+
+            if (!localRecords.length) {
+                body.innerHTML = '<tr><td colspan="7" class="muted">No student records found.</td></tr>';
+                return;
+            }
+
+            localRecords.forEach((student) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${cellText(student.id)}</td>
+                    <td>${cellText(student.student_id)}</td>
+                    <td>${cellText(student.name)}</td>
+                    <td>${cellText(student.program)}</td>
+                    <td>${cellText(student.year)}</td>
+                    <td>${cellText(student.section)}</td>
+                    <td>
+                        <button type="button" onclick="editStudent(${student.id})">Edit</button>
+                        <button type="button" class="button-danger" onclick="deleteStudent(${student.id})">Delete</button>
+                    </td>
+                `;
+                body.appendChild(row);
+            });
+        }
+
+        function renderPartnerTable() {
+            const body = document.getElementById('partnerTableBody');
+            body.innerHTML = '';
+
+            if (!partnerRecords.length) {
+                body.innerHTML = '<tr><td colspan="6" class="muted">No partner records loaded yet.</td></tr>';
+                return;
+            }
+
+            partnerRecords.forEach((student) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${cellText(student.id)}</td>
+                    <td>${cellText(student.student_id)}</td>
+                    <td>${cellText(student.name)}</td>
+                    <td>${cellText(student.program)}</td>
+                    <td>${cellText(student.year)}</td>
+                    <td>${cellText(student.section)}</td>
+                `;
+                body.appendChild(row);
+            });
+        }
+
+        async function loadLocalStudents() {
+            const status = document.getElementById('localStatus');
+            try {
+                const response = await fetch('/students');
+                if (!response.ok) throw new Error('HTTP ' + response.status);
+                const data = await response.json();
+                if (!Array.isArray(data)) throw new Error('Unexpected response format.');
+                localRecords = data;
+                renderLocalTable();
+                setStatus(status, `Loaded ${data.length} local record(s).`, 'info');
+            } catch (error) {
+                setStatus(status, 'Unable to load local student records: ' + error.message, 'error');
+            }
+        }
+
+        function getFormData() {
+            return {
+                student_id: document.getElementById('studentId').value.trim(),
+                name: document.getElementById('studentName').value.trim(),
+                program: document.getElementById('program').value.trim(),
+                year: document.getElementById('year').value,
+                section: document.getElementById('section').value.trim(),
+            };
+        }
+
+        async function saveStudent(event) {
+            event.preventDefault();
+            const status = document.getElementById('localStatus');
+            const studentId = document.getElementById('recordId').value;
+            const method = studentId ? 'PUT' : 'POST';
+            const url = studentId ? '/api/students/' + encodeURIComponent(studentId) : '/api/students';
+            const payload = getFormData();
+
+            try {
+                const response = await fetch(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                });
+                const result = await response.json().catch(() => ({}));
+                if (!response.ok) {
+                    throw new Error(result.error || 'HTTP ' + response.status);
+                }
+                setStatus(status, result.message || 'Student saved successfully.', 'info');
+                resetForm();
+                await loadLocalStudents();
+            } catch (error) {
+                setStatus(status, 'Save failed: ' + error.message, 'error');
+            }
+        }
+
+        function resetForm() {
+            document.getElementById('studentForm').reset();
+            document.getElementById('recordId').value = '';
+            document.getElementById('saveButton').textContent = 'Add Student';
+        }
+
+        function editStudent(id) {
+            const student = localRecords.find((item) => Number(item.id) === Number(id));
+            if (!student) return;
+
+            document.getElementById('recordId').value = student.id;
+            document.getElementById('studentId').value = student.student_id || '';
+            document.getElementById('studentName').value = student.name || '';
+            document.getElementById('program').value = student.program || '';
+            document.getElementById('year').value = student.year || '';
+            document.getElementById('section').value = student.section || '';
+            document.getElementById('saveButton').textContent = 'Update Student';
+            document.getElementById('studentId').focus();
+        }
+
+        async function deleteStudent(id) {
+            if (!confirm('Delete this student record?')) return;
+
+            const status = document.getElementById('localStatus');
+            try {
+                const response = await fetch('/api/students/' + encodeURIComponent(id), { method: 'DELETE' });
+                const result = await response.json().catch(() => ({}));
+                if (!response.ok) {
+                    throw new Error(result.error || 'HTTP ' + response.status);
+                }
+                setStatus(status, result.message || 'Student deleted successfully.', 'info');
+                resetForm();
+                await loadLocalStudents();
+            } catch (error) {
+                setStatus(status, 'Delete failed: ' + error.message, 'error');
+            }
+        }
+
+        async function loadPartnerRecords() {
+            const urlInput = document.getElementById('partnerApiUrl');
+            const url = (urlInput.value || '').trim();
+            const status = document.getElementById('partnerStatus');
+
+            if (!url) {
+                setStatus(status, 'Enter a partner API URL first.', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/partner-records?api_url=' + encodeURIComponent(url));
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.error || 'HTTP ' + response.status);
+                }
+                if (!Array.isArray(data)) throw new Error('Partner API must return a JSON array.');
+                partnerRecords = data;
+                renderPartnerTable();
+                setStatus(status, `Loaded ${data.length} partner record(s).`, 'info');
+            } catch (error) {
+                setStatus(status, 'Could not load partner records: ' + error.message, 'error');
+            }
+        }
+
+        function compareCounts() {
+            const status = document.getElementById('partnerStatus');
+            const localCount = localRecords.length;
+            const partnerCount = partnerRecords.length;
+            const difference = Math.abs(localCount - partnerCount);
+            setStatus(status, `Local records: ${localCount} | Partner records: ${partnerCount} | Difference: ${difference}.`, 'message');
+        }
+
+        document.getElementById('studentForm').addEventListener('submit', saveStudent);
+        window.addEventListener('DOMContentLoaded', loadLocalStudents);
+    </script>
+</body>
+</html>
