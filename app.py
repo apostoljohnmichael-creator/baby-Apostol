@@ -8,6 +8,7 @@ app = Flask(__name__)
 BASE_DIR = Path(__file__).resolve().parent
 DATABASE = BASE_DIR / "students.db"
 
+
 PARTNER_API_URL = os.environ.get(
     "PARTNER_API_URL",
     "https://jasminerose-2.onrender.com/api/students"
